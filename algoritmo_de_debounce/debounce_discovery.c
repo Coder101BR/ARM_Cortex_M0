@@ -28,7 +28,8 @@ int main(void) {
   SystemClock_Config();
 
   /* Habilita o Clock no port do led,  função definida em stm32f0xx_hal_rcc.h*/
-   __GPIOA_CLK_ENABLE();
+   // __GPIOA_CLK_ENABLE();
+  __GPIOC_CLK_ENABLE();
 
    /* Configura  o pino do led como output push-pull */
    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -36,11 +37,11 @@ int main(void) {
    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
    GPIO_InitStruct.Pin 	= GPIO_PIN_8;
 
-   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 
    /* Habilita o Clock no port do botão,  função definida em stm32f0xx_hal_rcc.h*/
-     __GPIOC_CLK_ENABLE();
+   //  __GPIOC_CLK_ENABLE();
 
    /* Configura  o pino do botão como input push-pull, utilizo a mesma variável declarada para a configuração do pino anterior*/
     GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
@@ -81,7 +82,7 @@ if(HAL_GPIO_ReadPin(GPIOx, GPIO_PIN) == 0){
    		   if ((leitura_atual == leitura_anterior) && (leitura_atual == 0)){
    			   cont_temp++;
    			   if(cont_temp >= 4){
-   				   HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
+   				   HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
    				   HAL_Delay(100);
    				   break;
    			   }
