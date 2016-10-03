@@ -12,7 +12,7 @@
 
 /* Struct definida em  stm32f0xx_hal_gpio.h para configrar o port*/
 
-void debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN);
+int debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN);
 void leds(int num);
 
 static GPIO_InitTypeDef  GPIO_InitStruct;
@@ -72,34 +72,37 @@ int main(void) {
 
 }
 
-void debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN)
-{
-if(HAL_GPIO_ReadPin(GPIOx, GPIO_PIN) == 0){
-   	   char i;
-   	   char cont_temp = 0;
-   	   char leitura_atual = HAL_GPIO_ReadPin(GPIOx, GPIO_PIN);
-   	   char leitura_anterior = 1;
-   	   for (i = 0; i <= 99; i++){
+int debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN){
+	if(HAL_GPIO_ReadPin(GPIOx, GPIO_PIN) == 0){
+		   char i;
+		   char cont_temp = 0;
+		   char leitura_atual = HAL_GPIO_ReadPin(GPIOx, GPIO_PIN);
+		   char leitura_anterior = 1;
+		   for (i = 0; i <= 99; i++){
 
-   		   HAL_Delay(10);
-   		   leitura_anterior = leitura_atual;
-   		   leitura_atual = HAL_GPIO_ReadPin(GPIOx, GPIO_PIN);
+			   HAL_Delay(10);
+			   leitura_anterior = leitura_atual;
+			   leitura_atual = HAL_GPIO_ReadPin(GPIOx, GPIO_PIN);
 
-   		   if ((leitura_atual == leitura_anterior) && (leitura_atual == 0)){
-   			   cont_temp++;
-   			   if(cont_temp >= 4){
-   				   //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-   				   num_global++;
-   				   HAL_Delay(100);
-   				   break;
-   			   }
-   		   }
-   		   else{
-   			   cont_temp = 0;
-   		   }
-   	   }
-
-      }
+			   if ((leitura_atual == leitura_anterior) && (leitura_atual == 0)){
+				   cont_temp++;
+				   if(cont_temp >= 4){
+					   //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+					   if(255 != num_global){
+					   num_global++;
+					   HAL_Delay(100);
+					   return 1;
+					   }
+					  // break;
+				   }
+			   }
+			   else{
+				   cont_temp = 0;
+			   }
+		   }
+		   return 0;
+	}
+	return 0;
 }
 
 void leds(int num)
