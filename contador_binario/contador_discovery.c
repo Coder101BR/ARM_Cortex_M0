@@ -20,6 +20,7 @@ static GPIO_InitTypeDef  GPIO_InitStruct;
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
+int num_global = 0;
 int main(void) {
 
   /* Inicializa as bibliotecas HAL */
@@ -55,6 +56,7 @@ int main(void) {
 
     /* Liga o Led e mantem até o botão ser pressionado novamente */
 
+
     while (1) {
 
    	/* função definida em stm32f0xx_hal_gpio.h */
@@ -64,7 +66,7 @@ int main(void) {
     	// HAL_GPIO_WritePin(GPIOA, 0xFF, 1);
 
        /* função definida em stm32f0xx_hal.h */
-    	leds(146);
+    	leds(num_global);
 
     }
 
@@ -87,6 +89,7 @@ if(HAL_GPIO_ReadPin(GPIOx, GPIO_PIN) == 0){
    			   cont_temp++;
    			   if(cont_temp >= 4){
    				   //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+   				   num_global++;
    				   HAL_Delay(100);
    				   break;
    			   }
