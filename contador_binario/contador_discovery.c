@@ -22,7 +22,8 @@ static void Error_Handler(void);
 
 int num_global = 0;
 int main(void) {
-
+	int btn_1;
+	int btn_2;
   /* Inicializa as bibliotecas HAL */
   HAL_Init();
 
@@ -49,7 +50,7 @@ int main(void) {
     GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull  = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-    GPIO_InitStruct.Pin 	 = GPIO_PIN_7;
+    GPIO_InitStruct.Pin 	 = (GPIO_PIN_7 | GPIO_PIN_6) ;
 
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
@@ -61,11 +62,16 @@ int main(void) {
 
    	/* função definida em stm32f0xx_hal_gpio.h */
 
-    	debouce_read(GPIOC, GPIO_PIN_7);
-    	// HAL_GPIO_WritePin(GPIOA, (GPIO_PIN_7 | GPIO_PIN_6 | GPIO_PIN_5 | GPIO_PIN_4), 1);
-    	// HAL_GPIO_WritePin(GPIOA, 0xFF, 1);
+    	btn_1 = debouce_read(GPIOC, GPIO_PIN_7);
+    	if((1 == btn_1) && (255 != num_global)){
+    		num_global++;
+    	}
 
-       /* função definida em stm32f0xx_hal.h */
+    	btn_2 = debouce_read(GPIOC, GPIO_PIN_6);
+    	if((1 == btn_2) && (0 != num_global)){
+    		num_global--;
+    	}
+
     	leds(num_global);
 
     }
@@ -87,13 +93,9 @@ int debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN){
 			   if ((leitura_atual == leitura_anterior) && (leitura_atual == 0)){
 				   cont_temp++;
 				   if(cont_temp >= 4){
-					   //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-					   if(255 != num_global){
-					   num_global++;
+
 					   HAL_Delay(100);
 					   return 1;
-					   }
-					  // break;
 				   }
 			   }
 			   else{
