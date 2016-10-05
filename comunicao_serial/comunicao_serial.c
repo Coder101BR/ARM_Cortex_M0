@@ -8,6 +8,8 @@
 
 #include "main.h"
 
+int debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN);
+
 /* Struct de configuração da comunicação serial definido em  stm32f0xx_hal_uart.h*/
 UART_HandleTypeDef UartHandle;
 
@@ -15,17 +17,17 @@ UART_HandleTypeDef UartHandle;
 static GPIO_InitTypeDef  GPIO_InitStruct;
 
 /* Buffer de Transmissão  */
-uint8_t Buffer[BUFFERSIZE] = " **** Exemplo de Serial ****\n\r ";
+uint8_t Buffer[BUFFERSIZE] = {'L'};
+uint8_t Buffer_1[BUFFERSIZE];
 
 
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
 
-
+int btn_1;
 int main(void) {
 
-  char protocolo = 0;
   /* Inicializa as bibliotecas HAL */
   HAL_Init();
 
@@ -34,18 +36,11 @@ int main(void) {
 
   /* Habilita o clock no port onde está o pino que possui função de TX e RX */
    __GPIOA_CLK_ENABLE();
-
-   GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-   //GPIO_InitStruct.Pull  = GPIO_PULLUP;
-   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-   GPIO_InitStruct.Pin 	= GPIO_PIN_7;
-
-   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+   __GPIOC_CLK_ENABLE();
 
  
  //    PA2     ------> USART2_TX
  //    PA3     ------> USART2_RX
-
 
   /*Configura os pinos GPIOs  para a função alternativa de RX e TX */
   GPIO_InitStruct.Pin       = GPIO_PIN_2|GPIO_PIN_3;  // Pino de TX verificar no  esquemático
@@ -56,6 +51,21 @@ int main(void) {
 
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /* Configura  o pino do led como output push-pull */
+  GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+  //GPIO_InitStruct.Pull  = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Pin 	= GPIO_PIN_7;
+
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* Configura  o pino do botão como input push-pull, utilizo a mesma variável declarada para a configuração do pino anterior*/
+   GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+   GPIO_InitStruct.Pull  = GPIO_PULLUP;
+   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+   GPIO_InitStruct.Pin 	 = GPIO_PIN_7;
+
+   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /* habilita o clock da  USART2 */
   __USART2_CLK_ENABLE();
@@ -91,25 +101,61 @@ int main(void) {
   while (1){
 
 
-    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
-   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer, 1, 0x1000) != HAL_OK)
-   {
-	  if('L' == protocolo){
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+	  btn_1 = debouce_read(GPIOC, GPIO_PIN_7);
+	  if(1 == btn_1){
+		  if (Buffer_1[0] == 'L'){
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+		  }
 	  }
+
+
+
+    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
+   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x1000) != HAL_OK)
+   {
 	  Error_Handler();
    }
  
   
     /*Escreve o dado a ser transmitido */
-    HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, 1, 100);
-
+    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, 1, 100)!= HAL_OK)
+    {
+      Error_Handler();
+    }
 
     HAL_Delay(100);
   }
 
 }
 
+int debouce_read(GPIO_TypeDef *GPIOx, int GPIO_PIN){
+	if(HAL_GPIO_ReadPin(GPIOx, GPIO_PIN) == 0){
+		   char i;
+		   char cont_temp = 0;
+		   char leitura_atual = HAL_GPIO_ReadPin(GPIOx, GPIO_PIN);
+		   char leitura_anterior = 1;
+		   for (i = 0; i <= 99; i++){
+
+			   HAL_Delay(10);
+			   leitura_anterior = leitura_atual;
+			   leitura_atual = HAL_GPIO_ReadPin(GPIOx, GPIO_PIN);
+
+			   if ((leitura_atual == leitura_anterior) && (leitura_atual == 0)){
+				   cont_temp++;
+				   if(cont_temp >= 4){
+
+					   HAL_Delay(100);
+					   return 1;
+				   }
+			   }
+			   else{
+				   cont_temp = 0;
+			   }
+		   }
+		   return 0;
+	}
+	return 0;
+}
 
 /* Função de configuração do clock - Até o momento iremos utiliza-la apenas, no futuro estudaremos as configuracoes */
 static void SystemClock_Config(void)
