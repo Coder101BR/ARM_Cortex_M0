@@ -18,7 +18,7 @@ static GPIO_InitTypeDef  GPIO_InitStruct;
 
 /* Buffer de Transmissão  */
 uint8_t Buffer[BUFFERSIZE] = {'L'};
-uint8_t Buffer_1[BUFFERSIZE];
+uint8_t Buffer_1[50];
 
 
 static void SystemClock_Config(void);
@@ -27,7 +27,7 @@ static void Error_Handler(void);
 
 int btn_1;
 int main(void) {
-
+	int flag = 0;
   /* Inicializa as bibliotecas HAL */
   HAL_Init();
 
@@ -112,19 +112,35 @@ int main(void) {
 		    HAL_Delay(100);
 
 		    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
-		   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x100) != HAL_OK)
+		   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x200) != HAL_OK)
 		   {
 			//  Error_Handler();
 		   }
 
-		  if (Buffer_1[0] == 'L')
+		  if ((Buffer_1[0] == 'L') && (0 == flag) )
 		  {
-			  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
-			  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+			  Buffer[0] = 'P';
+			  flag = 1;
+		  }
+		  else if ((Buffer_1[0] == 'L') && (1 == flag) )
+		  {
+			 // Buffer[0] = 'D';
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+			  flag = 2;
+		  }
+		  else if (Buffer_1[0] == 'D')
+		  {
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+			  flag = 0;
 		  }
 	  }
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
-	  HAL_Delay(500);
+
+	  if (2 == flag)
+	  {
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
+		  HAL_Delay(500);
+	  }
 
   }
 
