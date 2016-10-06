@@ -55,7 +55,7 @@ int main(void) {
   GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
   //GPIO_InitStruct.Pull  = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStruct.Pin 	= GPIO_PIN_7;
+  GPIO_InitStruct.Pin 	= (GPIO_PIN_7 | GPIO_PIN_4);
 
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -98,32 +98,34 @@ int main(void) {
 
 
 
-  while (1){
-
-
+  while (1)
+  {
 	  btn_1 = debouce_read(GPIOC, GPIO_PIN_7);
-	  if(1 == btn_1){
-		  if (Buffer_1[0] == 'L'){
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+	  if(1 == btn_1)
+	  {
+		    /*Escreve o dado a ser transmitido */
+		    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, 1, 100)!= HAL_OK)
+		    {
+		   //   Error_Handler();
+		    }
+
+		    HAL_Delay(100);
+
+		    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
+		   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x100) != HAL_OK)
+		   {
+			//  Error_Handler();
+		   }
+
+		  if (Buffer_1[0] == 'L')
+		  {
+			  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+			  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
 		  }
 	  }
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
+	  HAL_Delay(500);
 
-
-
-    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
-   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x1000) != HAL_OK)
-   {
-	  Error_Handler();
-   }
- 
-  
-    /*Escreve o dado a ser transmitido */
-    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, 1, 100)!= HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    HAL_Delay(100);
   }
 
 }
