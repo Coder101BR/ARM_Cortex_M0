@@ -148,13 +148,13 @@ int main(void) {
 		  }
 	  }
 
-	  else if(estado == 2)
+	  else if((0 == btn_1) && (estado == 2))
 	  {
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
 		  HAL_Delay(500);
 	  }
-
-	  if((1 == btn_1) && (estado == 2))
+#if 1
+	  else if((1 == btn_1) && (estado == 2))
 	  	  {
 	  		    /*Escreve o dado a ser transmitido */
 	  		    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer_desliga, 1, 100)!= HAL_OK)
@@ -175,6 +175,7 @@ int main(void) {
 	  			  estado = 0;
 	  		  }
 	  	  }
+#endif
 
 
   }
