@@ -17,8 +17,10 @@ UART_HandleTypeDef UartHandle;
 static GPIO_InitTypeDef  GPIO_InitStruct;
 
 /* Buffer de Transmissão  */
-uint8_t Buffer[BUFFERSIZE] = {'L'};
-uint8_t Buffer_1[50];
+uint8_t Buffer_liga[BUFFERSIZE] = {'L'};
+uint8_t Buffer_pisca[BUFFERSIZE] = {'P'};
+uint8_t Buffer_desliga[BUFFERSIZE] = {'D'};
+uint8_t Buffer_1[5];
 
 
 static void SystemClock_Config(void);
@@ -27,7 +29,7 @@ static void Error_Handler(void);
 
 int btn_1;
 int main(void) {
-	int flag = 0;
+	int estado = 0;
   /* Inicializa as bibliotecas HAL */
   HAL_Init();
 
@@ -94,17 +96,18 @@ int main(void) {
   
 
   /* Envia a mensagem de inicio */
-  HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, BUFFERSIZE, 5000);
+ // HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, BUFFERSIZE, 5000);
 
 
-
+  estado = 0;
   while (1)
   {
+
 	  btn_1 = debouce_read(GPIOC, GPIO_PIN_7);
-	  if(1 == btn_1)
+	  if((1 == btn_1) && (estado == 0))
 	  {
 		    /*Escreve o dado a ser transmitido */
-		    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer, 1, 100)!= HAL_OK)
+		    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer_liga, 1, 100)!= HAL_OK)
 		    {
 		   //   Error_Handler();
 		    }
@@ -116,31 +119,63 @@ int main(void) {
 		   {
 			//  Error_Handler();
 		   }
-
-		  if ((Buffer_1[0] == 'L') && (0 == flag) )
+		  if (Buffer_1[0] == 'L')
 		  {
 			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
-			  Buffer[0] = 'P';
-			  flag = 1;
-		  }
-		  else if ((Buffer_1[0] == 'L') && (1 == flag) )
-		  {
-			 // Buffer[0] = 'D';
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
-			  flag = 2;
-		  }
-		  else if (Buffer_1[0] == 'D')
-		  {
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
-			  flag = 0;
+			  estado = 1;
 		  }
 	  }
 
-	  if (2 == flag)
+	  else if((1 == btn_1) && (estado == 1))
 	  {
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
+		    /*Escreve o dado a ser transmitido */
+		    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer_pisca, 1, 100)!= HAL_OK)
+		    {
+		   //   Error_Handler();
+		    }
+
+		    HAL_Delay(100);
+
+		    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
+		   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x200) != HAL_OK)
+		   {
+			//  Error_Handler();
+		   }
+		  if (Buffer_1[0] == 'P')
+		  {
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+			  estado = 2;
+		  }
+	  }
+
+	  else if(estado == 2)
+	  {
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
 		  HAL_Delay(500);
 	  }
+
+	  if((1 == btn_1) && (estado == 2))
+	  	  {
+	  		    /*Escreve o dado a ser transmitido */
+	  		    if(HAL_UART_Transmit(&UartHandle, (uint8_t*)Buffer_desliga, 1, 100)!= HAL_OK)
+	  		    {
+	  		   //   Error_Handler();
+	  		    }
+
+	  		    HAL_Delay(100);
+
+	  		    /*Le dado recebido na  UART  -- processo bloqueia o fluxo do programa */
+	  		   if(HAL_UART_Receive(&UartHandle, (uint8_t *)Buffer_1, 1, 0x200) != HAL_OK)
+	  		   {
+	  			//  Error_Handler();
+	  		   }
+	  		  if (Buffer_1[0] == 'D')
+	  		  {
+	  			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+	  			  estado = 0;
+	  		  }
+	  	  }
+
 
   }
 
